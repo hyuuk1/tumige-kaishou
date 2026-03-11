@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int @id @default(autoincrement())
+  discordId     String @unique//数字なのでBigIntにすべきだが、discord.jsの型に合わせるためStringにしている 
+  steamId       String? @unique 
+  lastSyncedAt  DateTime?
+  PlayStatuses  PlayStatus[]
+  createdAt     DateTime @default(now())
+}
+
+model DiscordServer {
+  id            Int @id @default(autoincrement())
+  serverId      String @unique 
+  tumigeThresholdTime Int @default(180)
+  lastBatchSyncedAt DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model PlayStatus {
+  id            Int @id @default(autoincrement())
+  user          User @relation(fields: [userId], references: [id])
+  userId        Int
+  game          Game @relation(fields: [gameId], references: [id])
+  gameId        Int
+  playtimeForever Int
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@unique([userId, gameId])
+}
+
+model Game {
+  id            Int @id @default(autoincrement())
+  steamAppId    Int @unique
+  title         String
+  imageUrl      String?
+  PlayStatuses  PlayStatus[]
+  createdAt     DateTime @default(now())
+}
